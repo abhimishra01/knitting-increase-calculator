@@ -13,7 +13,8 @@ export default {
   email: 'hello@knittingincreasecalculator.com',       // contact email (shown on Contact and Privacy pages)
   ga4: '',                            // GA4 measurement ID, e.g. 'G-XXXXXXXXXX'. Empty = Google Analytics off
   adsense: '',                        // AdSense publisher ID, e.g. 'ca-pub-1234567890123456'. Empty = ads off
-  brand: '#9c2a55',                   // brand color (hex)
+  brand: '#7e22ce',                   // brand color (hex)
+  skin: 'clay',                       // look: minimal, swiss, clay or retro
   locale: 'en-US',                    // BCP 47 language tag
   ogImage: '/og.png',                        // e.g. '/og.png' (1200x630 file in public/). Empty = no image
   category: 'LifestyleApplication',   // schema.org applicationCategory

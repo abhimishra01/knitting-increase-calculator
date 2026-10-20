@@ -145,26 +145,26 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
   .kic .seg span { display: flex; min-height: 44px; align-items: center; justify-content: center; border-radius: 10px; padding: 0 4px; text-align: center; font-size: 0.9375rem; font-weight: 600; color: var(--muted); transition: background .15s, color .15s; }
   .kic .seg input:checked + span { background: var(--brand); color: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / .18); }
   .kic .seg input:focus-visible + span { outline: 2px solid var(--brand-ink); outline-offset: 2px; }
-  :root[data-theme="dark"] .kic .seg input:checked + span { background: #cf8aa3; background: color-mix(in oklab, var(--brand) 60%, white); color: #16161a; }
+  :root[data-theme="dark"] .kic .seg input:checked + span { background: #b27ae2; background: color-mix(in oklab, var(--brand) 60%, white); color: #16161a; }
   .kic .stepper { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 4px; }
-  .kic .stepper button { min-height: 52px; padding: 0; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); font-size: 1.5rem; font-weight: 600; line-height: 1; color: var(--ink); cursor: pointer; touch-action: manipulation; }
+  .kic .stepper button { min-height: 52px; padding: 0; border-radius: 12px; border: 1px solid var(--edge); background: var(--paper); font-size: 1.5rem; font-weight: 600; line-height: 1; color: var(--ink); cursor: pointer; touch-action: manipulation; }
   .kic .stepper button:hover { border-color: var(--brand); }
   .kic .stepper button:active { background: var(--brand-soft); }
-  .kic .stepper input { min-height: 52px; width: 100%; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); text-align: center; font-family: var(--font-mono); font-size: 1.375rem; font-weight: 700; padding: 0; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .kic .stepper input { min-height: 52px; width: 100%; border-radius: 12px; border: 1px solid var(--edge); background: var(--paper); text-align: center; font-family: var(--font-mono); font-size: 1.375rem; font-weight: 700; padding: 0; color: var(--ink); font-variant-numeric: tabular-nums; }
   .kic .stepper input:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 30%, transparent); }
   .kic .stepper input[aria-invalid="true"] { border-color: var(--err); }
   .kic .btn { min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--brand); color: #fff; font-weight: 700; font-size: 0.9375rem; cursor: pointer; border: 0; touch-action: manipulation; }
   .kic .btn:hover { filter: brightness(1.08); }
   .kic .btn:disabled { opacity: .45; cursor: not-allowed; }
-  :root[data-theme="dark"] .kic .btn { background: #cf8aa3; background: color-mix(in oklab, var(--brand) 60%, white); color: #16161a; }
+  :root[data-theme="dark"] .kic .btn { background: #b27ae2; background: color-mix(in oklab, var(--brand) 60%, white); color: #16161a; }
   .kic .opt { display: grid; gap: 4px; font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
-  .kic .opt select { min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); padding: 0 10px; font-size: 1rem; font-weight: 500; }
+  .kic .opt select { min-height: 44px; border-radius: 10px; border: 1px solid var(--edge); background: var(--paper); color: var(--ink); padding: 0 10px; font-size: 1rem; font-weight: 500; }
   .kic .result { min-height: 4.5rem; overflow-wrap: anywhere; color: var(--ink); }
   .kic .result b { color: var(--brand-ink); font-weight: 800; }
   .kic .dots { display: flex; flex-wrap: wrap; gap: 5px 4px; align-content: flex-start; min-height: 5.5rem; max-height: 15rem; overflow: auto; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); }
   .kic .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--dot); flex: none; }
   .kic .dot.new { border-radius: 2px; transform: rotate(45deg) scale(.85); background: var(--brand); }
-  :root[data-theme="dark"] .kic .dot.new { background: #cf8aa3; background: color-mix(in oklab, var(--brand) 60%, white); }
+  :root[data-theme="dark"] .kic .dot.new { background: #b27ae2; background: color-mix(in oklab, var(--brand) 60%, white); }
   .kic .dot.new.pill { border-radius: 99px; width: 22px; transform: none; }
   .kic .dots .gap { margin-right: 8px; }
   .kic .explain { min-height: 1.25rem; }
