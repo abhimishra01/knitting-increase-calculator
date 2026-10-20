@@ -1,29 +1,38 @@
 ---
 // The calculator. Results update as you type. Logic lives in src/lib/spread.js (tested).
 // The first result is drawn here at build time, so the page is not empty before the script runs.
-import { plan, summary, explain } from '../lib/spread.js';
-import { lineHtml, dotsHtml, whereText, esc } from '../lib/render.js';
-const first = plan({ stitches: 50, changes: 7, spacing: 'simple' });
+import { plan, summary, explain, check, edgeNote } from '../lib/spread.js';
+import { lineHtml, dotsHtml, whereText, mapHtml, esc } from '../lib/render.js';
+interface Props {
+  // Starting values. The home page uses the defaults. Landing pages pass their own case.
+  preset?: { n?: number; k?: number; mode?: 'inc' | 'dec'; shape?: 'flat' | 'round'; craft?: 'knit' | 'crochet'; spacing?: 'simple' | 'even'; style?: 'paren' | 'star' };
+  // Home page only: pick "Most even" for small rows and remember the last numbers in this browser.
+  auto?: boolean;
+}
+const { preset = {}, auto = false } = Astro.props;
+const P = { n: 50, k: 7, mode: 'inc', shape: 'flat', craft: 'knit', spacing: 'simple', style: 'paren', ...preset };
+const crochet = P.craft === 'crochet';
+const first = plan({ stitches: P.n, changes: P.k, mode: P.mode, shape: P.shape, craft: P.craft, spacing: P.spacing, style: P.style });
 if (!first.ok) throw new Error('Default calculator values failed');
 const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
 ---
-<section id="tool" aria-label="Knitting and crochet increase calculator" class="kic rounded-2xl border border-line bg-card p-4 sm:p-6 sm:shadow-[6px_6px_0_0_var(--line)]">
+<section id="tool" data-auto={auto ? '1' : '0'} aria-label="Knitting and crochet increase calculator" class="kic rounded-2xl border border-line bg-card p-4 sm:p-6 sm:shadow-[6px_6px_0_0_var(--line)]">
   <div class="grid gap-5 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-8">
     <!-- Inputs -->
-    <div class="space-y-4">
+    <div class="inputs space-y-4">
       <div class="grid grid-cols-2 gap-3">
         <fieldset class="min-w-0">
           <legend class="mb-1.5 text-sm font-semibold">Craft</legend>
           <div class="seg two" role="radiogroup">
-            <label><input type="radio" name="craft" value="knit" checked /><span>Knit</span></label>
-            <label><input type="radio" name="craft" value="crochet" /><span>Crochet</span></label>
+            <label><input type="radio" name="craft" value="knit" checked={P.craft === 'knit'} /><span>Knit</span></label>
+            <label><input type="radio" name="craft" value="crochet" checked={P.craft === 'crochet'} /><span>Crochet</span></label>
           </div>
         </fieldset>
         <fieldset class="min-w-0">
           <legend class="mb-1.5 text-sm font-semibold">Change</legend>
           <div class="seg two" role="radiogroup">
-            <label><input type="radio" name="mode" value="inc" checked /><span>Increase</span></label>
-            <label><input type="radio" name="mode" value="dec" /><span>Decrease</span></label>
+            <label><input type="radio" name="mode" value="inc" checked={P.mode === 'inc'} /><span>Increase</span></label>
+            <label><input type="radio" name="mode" value="dec" checked={P.mode === 'dec'} /><span>Decrease</span></label>
           </div>
         </fieldset>
       </div>
@@ -31,8 +40,8 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
       <fieldset>
         <legend class="mb-1.5 text-sm font-semibold">Work</legend>
         <div class="seg two" role="radiogroup">
-          <label><input type="radio" name="shape" value="flat" checked /><span>Flat rows</span></label>
-          <label><input type="radio" name="shape" value="round" /><span>In the round</span></label>
+          <label><input type="radio" name="shape" value="flat" checked={P.shape === 'flat'} /><span>Flat rows</span></label>
+          <label><input type="radio" name="shape" value="round" checked={P.shape === 'round'} /><span>In the round</span></label>
         </div>
       </fieldset>
 
@@ -41,28 +50,36 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
           <label for="n" class="text-sm font-semibold">Stitches now</label>
           <div class="stepper mt-1.5">
             <button type="button" data-step="n" data-dir="-1" aria-label="One fewer stitch on the needle">&minus;</button>
-            <input id="n" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="50" maxlength="4" />
+            <input id="n" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value={P.n} maxlength="4" />
             <button type="button" data-step="n" data-dir="1" aria-label="One more stitch on the needle">+</button>
           </div>
         </div>
         <div>
-          <label for="k" class="text-sm font-semibold"><span id="k-label">Stitches to add</span></label>
+          <label for="k" class="text-sm font-semibold"><span id="k-label">{P.mode === 'dec' ? 'Stitches to remove' : 'Stitches to add'}</span></label>
           <div class="stepper mt-1.5">
             <button type="button" data-step="k" data-dir="-1" aria-label="One fewer change">&minus;</button>
-            <input id="k" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="7" maxlength="4" aria-describedby="k-hint" />
+            <input id="k" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value={P.k} maxlength="4" aria-describedby="k-hint" />
             <button type="button" data-step="k" data-dir="1" aria-label="One more change">+</button>
           </div>
         </div>
         <p id="k-hint" class="col-span-2 mt-1.5 text-sm text-muted empty:hidden" aria-live="polite"></p>
       </div>
 
+      <fieldset>
+        <legend class="mb-1.5 text-sm font-semibold">I know</legend>
+        <div class="seg two" role="radiogroup">
+          <label><input type="radio" name="by" value="change" checked /><span id="by-change">{P.mode === 'dec' ? 'How many to remove' : 'How many to add'}</span></label>
+          <label><input type="radio" name="by" value="target" /><span>Final stitch count</span></label>
+        </div>
+      </fieldset>
+
       <details class="opts rounded-xl border border-line px-3 py-2">
         <summary class="cursor-pointer text-sm font-semibold">More options</summary>
         <div class="mt-3 grid gap-3 pb-1">
-          <label class="opt" data-for="knit">Row stitch
+          <label class="opt" data-for="knit" hidden={crochet}>Row stitch
             <select id="knit"><option value="K">Knit (K)</option><option value="P">Purl (P)</option></select>
           </label>
-          <label class="opt" data-for="knit">Increase
+          <label class="opt" data-for="knit" hidden={crochet}>Increase
             <select id="inc">
               <option value="M1">M1 (make one)</option>
               <option value="M1L">M1L (left lean)</option>
@@ -71,7 +88,7 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
               <option value="KFB">KFB (knit front and back)</option>
             </select>
           </label>
-          <label class="opt" data-for="knit">Decrease
+          <label class="opt" data-for="knit" hidden={crochet}>Decrease
             <select id="dec">
               <option value="auto">K2tog</option>
               <option value="ssk">SSK</option>
@@ -79,15 +96,15 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
               <option value="tbl">K2tog tbl</option>
             </select>
           </label>
-          <label class="opt" id="edge-wrap">Plain edge stitches at each end
+          <label class="opt" id="edge-wrap" hidden={P.shape !== 'flat'}>Plain edge stitches at each end
             <select id="edge">
               <option value="0">None</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
             </select>
           </label>
           <label class="opt">Repeats
             <select id="style">
-              <option value="star">*...; rep from * 7 more times</option>
-              <option value="paren">(...) 8 times</option>
+              <option value="paren" selected={P.style === 'paren'}>(...) 8 times</option>
+              <option value="star" selected={P.style === 'star'}>*...; rep from * 7 more times</option>
             </select>
           </label>
         </div>
@@ -96,20 +113,24 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
 
     <!-- Results -->
     <div class="min-w-0">
-      <p id="summary" class="min-h-[1.5rem] text-sm font-medium text-muted">{summary(first)}</p>
+      <p id="summary" class="min-h-[1.5rem] text-sm font-medium text-muted">{summary(first)}{P.shape === 'round' ? ' Work it around the whole round.' : ''}</p>
       <div class="mt-2 rounded-xl border border-line bg-paper p-4">
         <div class="flex items-center justify-between gap-3">
           <p class="text-sm font-semibold uppercase tracking-wide text-muted">Pattern line</p>
-          <button id="copy" type="button" class="btn">Copy</button>
+          <span class="noprint flex gap-2">
+            <button id="print" type="button" class="btn ghost">Print</button>
+            <button id="copy" type="button" class="btn">Copy</button>
+          </span>
         </div>
         <p id="result" class="result mt-3 font-mono text-lg font-semibold leading-snug sm:text-xl" aria-live="polite" aria-atomic="true" set:html={lineHtml(first.text + '.', first.op)}></p>
-        <noscript><p class="mt-2 text-sm text-muted">Turn on JavaScript to change the numbers. The line above is for 50 stitches and 7 increases.</p></noscript>
+        <p id="check" class="mt-2 text-sm font-medium">{check(first)}</p>
+        <noscript><p class="mt-2 text-sm text-muted">Turn on JavaScript to change the numbers. The line above is for {P.n} stitches and {P.k} {P.mode === 'dec' ? 'decreases' : 'increases'}.</p></noscript>
         <p id="explain" class="explain mt-2 text-sm text-muted">{explain(first.op)}</p>
-        <fieldset class="mt-3">
+        <fieldset class="noprint mt-3">
           <legend class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Line style</legend>
           <div class="seg two" role="radiogroup">
-            <label><input type="radio" name="spacing" value="simple" checked /><span>Shorter line</span></label>
-            <label><input type="radio" name="spacing" value="even" /><span>Most even</span></label>
+            <label><input type="radio" name="spacing" value="simple" checked={P.spacing === 'simple'} /><span>Shorter line</span></label>
+            <label><input type="radio" name="spacing" value="even" checked={P.spacing === 'even'} /><span>Most even</span></label>
           </div>
         </fieldset>
       </div>
@@ -117,15 +138,17 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
       <div class="mt-4">
         <p class="text-sm font-semibold uppercase tracking-wide text-muted">Your row</p>
         <div id="dots" class="dots mt-2" role="img" aria-label="" set:html={dotsHtml(first.cells)}></div>
+        <div id="map" class="map mt-3" aria-hidden="true" set:html={mapHtml(first)}></div>
         <ul class="legend mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted" aria-hidden="true">
           <li><i class="dot"></i> stitch</li>
-          <li id="legend-op"><i class="dot new"></i> <span>new stitch</span></li>
+          <li id="legend-op" set:html={P.mode === 'dec' ? '<i class="dot new pill"></i> <span>2 stitches worked together</span>' : '<i class="dot new"></i> <span>new stitch</span>'}></li>
         </ul>
       </div>
 
       <div class="mt-4 min-h-[3.5rem]">
         <p class="text-sm font-semibold uppercase tracking-wide text-muted" id="where-h">Where the changes go</p>
-        <p id="where" class="mt-1 text-sm leading-relaxed">{whereText(first)}</p>
+        <p id="edge-note" class="mt-1 text-sm leading-relaxed">{edgeNote(first)}</p>
+        <p id="where" class="mt-2 text-sm leading-relaxed text-muted">{whereText(first)}</p>
         <ul id="notes" class="mt-2 list-disc space-y-1 pl-5 text-sm text-muted" set:html={firstNotes}></ul>
       </div>
       <p id="copy-status" class="sr-only" aria-live="polite"></p>
@@ -154,6 +177,21 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
   .kic .stepper input:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 30%, transparent); }
   .kic .stepper input[aria-invalid="true"] { border-color: var(--err); }
   .kic .btn { min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--brand); color: #fff; font-weight: 700; font-size: 0.9375rem; cursor: pointer; border: 0; touch-action: manipulation; }
+  .kic .btn.ghost { background: transparent; color: var(--brand-ink); border: 1px solid var(--edge); }
+  :root[data-theme="dark"] .kic .btn.ghost { background: transparent; color: var(--brand-ink); }
+  .kic .map { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 4px; font-family: var(--font-mono); font-size: 0.8125rem; }
+  .kic .mg { display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px; border: 1px dashed var(--edge); border-radius: 10px; }
+  .kic .mb { display: inline-block; padding: 3px 8px; border-radius: 6px; font-weight: 700; background: var(--brand-soft); color: var(--ink); }
+  .kic .mb.c { background: var(--brand); color: #fff; }
+  :root[data-theme="dark"] .kic .mb.c { background: #b27ae2; background: color-mix(in oklab, var(--brand) 60%, white); color: #16161a; }
+  .kic .mx { color: var(--muted); font-weight: 700; padding: 0 2px; }
+  .kic .mx.end { font-weight: 500; font-family: var(--font-sans); }
+  @media print {
+    header, footer, .noprint, .inputs, #tool .legend, #dots, .prose-site, aside { display: none !important; }
+    #tool { border: 0 !important; box-shadow: none !important; }
+    #tool > div { display: block !important; }
+    .kic .result { font-size: 1.25rem; }
+  }
   .kic .btn:hover { filter: brightness(1.08); }
   .kic .btn:disabled { opacity: .45; cursor: not-allowed; }
   :root[data-theme="dark"] .kic .btn { background: #b27ae2; background: color-mix(in oklab, var(--brand) 60%, white); color: #16161a; }
@@ -172,8 +210,8 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
 </style>
 
 <script>
-  import { plan, summary, explain, MAX_STITCHES } from '../lib/spread.js';
-  import { lineHtml, dotsHtml, whereText, esc } from '../lib/render.js';
+  import { plan, summary, explain, check, edgeNote, MAX_STITCHES } from '../lib/spread.js';
+  import { lineHtml, dotsHtml, whereText, mapHtml, esc } from '../lib/render.js';
 
   const $ = (id: string) => document.getElementById(id)!;
   const nEl = $('n') as HTMLInputElement;
@@ -184,10 +222,24 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
   const num = (el: HTMLInputElement) => (el.value.trim() === '' ? NaN : Number(el.value));
 
   // Share links carry the whole setup: numbers, radio choices and the option menus.
-  const RADIOS: Record<string, string> = { craft: 'c', mode: 'm', shape: 's', spacing: 'sp' };
+  const RADIOS: Record<string, string> = { craft: 'c', mode: 'm', shape: 's', spacing: 'sp', by: 'b' };
   const SELECTS: Record<string, string> = { knit: 'kn', inc: 'i', dec: 'd', edge: 'e', style: 'st' };
+  // Home page only: small rows start on "Most even" until the visitor picks a style, and the last numbers come back.
+  const auto = document.getElementById('tool')!.dataset.auto === '1';
+  let spacingTouched = !auto;
   try {
     const u = new URLSearchParams(location.search);
+    if (auto && u.has('sp')) spacingTouched = true;
+    if (auto && ![...u.keys()].length) {
+      const saved = JSON.parse(localStorage.getItem('kic-last') || 'null');
+      if (saved && Number.isInteger(saved.n) && Number.isInteger(saved.k) && saved.n >= 1 && saved.n <= 1000 && saved.k >= 0 && saved.k <= 1000) {
+        nEl.value = String(saved.n); kEl.value = String(saved.k);
+        for (const name of ['mode', 'shape', 'craft']) {
+          const r = document.querySelector(`input[name="${name}"][value="${saved[name]}"]`) as HTMLInputElement | null;
+          if (r) r.checked = true;
+        }
+      }
+    }
     const set = (el: HTMLInputElement, v: string | null) => { if (v && /^\d{1,4}$/.test(v)) el.value = v; };
     set(nEl, u.get('n')); set(kEl, u.get('k'));
     for (const [name, key] of Object.entries(RADIOS)) {
@@ -232,25 +284,33 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
     const kfb = selEl('inc').querySelector('option[value="KFB"]')!;
     kfb.textContent = purl ? 'PFB (purl front and back)' : 'KFB (knit front and back)';
 
-    $('k-label').textContent = isDec ? 'Stitches to remove' : 'Stitches to add';
     $('legend-op').innerHTML = isDec
       ? '<i class="dot new pill"></i> <span>2 stitches worked together</span>'
       : '<i class="dot new"></i> <span>new stitch</span>';
 
     const n = num(nEl);
-    const k = num(kEl);
+    // "Final stitch count": the second field holds the target, and the change is the difference.
+    const byTarget = q('by') === 'target';
+    const field = num(kEl);
+    const k = byTarget ? (isDec ? n - field : field - n) : field;
+    $('k-label').textContent = byTarget ? 'Stitches you want' : isDec ? 'Stitches to remove' : 'Stitches to add';
+    $('by-change').textContent = isDec ? 'How many to remove' : 'How many to add';
+    if (!spacingTouched && Number.isFinite(n)) {
+      (document.querySelector(`input[name="spacing"][value="${n < 30 ? 'even' : 'simple'}"]`) as HTMLInputElement).checked = true;
+    }
     const nValid = Number.isInteger(n) && n >= 1 && n <= MAX_STITCHES;
     nEl.setAttribute('aria-invalid', String(!nValid && Number.isFinite(n)));
 
     const incSel = sel('inc');
     const inc = crochet ? undefined : incSel === 'KFB' && purl ? 'PFB' : incSel;
     const dec = crochet ? undefined : names[sel('dec') as keyof typeof names];
-    const p = plan({
+    const wrongWay = byTarget && Number.isFinite(n) && Number.isFinite(field) && k < 0;
+    const p = wrongWay ? { ok: false, error: isDec ? `Your final count must be lower than ${n}.` : `Your final count must be higher than ${n}.` } : plan({
       stitches: n, changes: k, mode, shape, craft, knit: purl ? 'P' : 'K', inc, dec,
       style: sel('style'), spacing: q('spacing'), edge: Number(sel('edge')),
     });
 
-    const hint = $('k-hint'), result = $('result'), dots = $('dots'), where = $('where'), notes = $('notes'), sum = $('summary'), why = $('explain');
+    const hint = $('k-hint'), checkEl = $('check'), mapEl = $('map'), edgeEl = $('edge-note'), result = $('result'), dots = $('dots'), where = $('where'), notes = $('notes'), sum = $('summary'), why = $('explain');
     const copy = $('copy') as HTMLButtonElement;
     const blank = !Number.isFinite(n) || !Number.isFinite(k);
     kEl.setAttribute('aria-invalid', String(!p.ok && !blank));
@@ -263,17 +323,21 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
       result.textContent = blank ? 'Enter both numbers to see your pattern line.' : 'Fix the numbers above to see your pattern line.';
       sum.textContent = '';
       why.textContent = '';
+      checkEl.textContent = ''; mapEl.innerHTML = ''; edgeEl.textContent = '';
       dots.innerHTML = ''; dots.setAttribute('aria-label', '');
       where.textContent = ''; notes.innerHTML = '';
       copy.disabled = true; lastText = '';
       return;
     }
 
-    hint.textContent = isDec && n >= 2 ? `Most you can decrease: ${Math.floor(n / 2)}.` : '';
+    hint.textContent = byTarget ? `That is ${p.k} ${isDec ? (p.k === 1 ? 'decrease' : 'decreases') : (p.k === 1 ? 'increase' : 'increases')}.` : isDec && n >= 2 ? `Most you can decrease: ${Math.floor(n / 2)}.` : '';
     result.innerHTML = lineHtml(p.text + '.', p.op);
     lastText = p.text + '.';
     copy.disabled = false;
     why.textContent = explain(p.op);
+    checkEl.textContent = check(p);
+    mapEl.innerHTML = mapHtml(p);
+    edgeEl.textContent = edgeNote(p);
     sum.textContent = summary(p) + (shape === 'round' ? ' Work it around the whole round.' : '');
 
     dots.innerHTML = dotsHtml(p.cells);
@@ -282,7 +346,10 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
     notes.innerHTML = p.notes.map((t: string) => `<li>${esc(t)}</li>`).join('');
 
     try {
-      const u = new URLSearchParams({ n: String(n), k: String(k) });
+      if (auto && !byTarget) localStorage.setItem('kic-last', JSON.stringify({ n, k: field, mode, shape, craft }));
+    } catch {}
+    try {
+      const u = new URLSearchParams({ n: String(n), k: String(field) });
       for (const [name, key] of Object.entries(RADIOS)) u.set(key, q(name));
       for (const [id, key] of Object.entries(SELECTS)) u.set(key, sel(id));
       history.replaceState(null, '', `${location.pathname}?${u}`);
@@ -310,7 +377,11 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
   document.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) => {
     b.addEventListener('click', () => step(b.dataset.step === 'n' ? nEl : kEl, Number(b.dataset.dir)));
   });
-  document.querySelectorAll('input[type=radio], select').forEach((el) => el.addEventListener('change', render));
+  document.querySelectorAll('input[type=radio], select').forEach((el) => el.addEventListener('change', () => {
+    if ((el as HTMLInputElement).name === 'spacing') spacingTouched = true;
+    render();
+  }));
+  $('print').addEventListener('click', () => window.print());
 
   $('copy').addEventListener('click', async () => {
     if (!lastText) return;

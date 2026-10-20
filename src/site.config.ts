@@ -6,7 +6,7 @@ export default {
   cloudflareProject: 'knitting-increase-calculator',    // Cloudflare Pages project name (used by npm run deploy)
   keyword: 'knitting increase calculator',            // main keyword: goes in the H1 and title
   keywords: ['knitting increase evenly calculator', 'crochet increase calculator', 'increase evenly across a row', 'decrease evenly calculator', 'evenly spaced increases', 'knitting decrease calculator', 'M1 and K2tog spacing'], // supporting keywords
-  titleOverride: 'Knitting and Crochet Increase Evenly Calculator', // home page <title>, under 60 characters
+  titleOverride: 'Knitting Increase Calculator: Increase Evenly Across a Row', // home page <title>, under 60 characters
   tagline: 'Free, private, no sign-up',  // short line used in the title after the keyword
   description:
     'Increase or decrease evenly across a row, for knitting or crochet. Enter your stitches and how many to add or remove. Get the exact pattern line, flat or in the round, plus a picture of your row.',

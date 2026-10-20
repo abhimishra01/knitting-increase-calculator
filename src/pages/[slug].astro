@@ -1,0 +1,96 @@
+---
+// One landing page per case in src/data/cases.ts. Each page opens the calculator with that case filled in.
+import Base from '../layouts/Base.astro';
+import Tool from '../components/Tool.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { cases } from '../data/cases.ts';
+import { plan, check } from '../lib/spread.js';
+import { href } from '../lib/url.ts';
+import site from '../site.config.ts';
+
+export function getStaticPaths() {
+  return cases.map((c) => ({ params: { slug: c.slug }, props: { c } }));
+}
+const { c: x } = Astro.props;
+const pre = x.preset;
+const isDec = pre.mode === 'dec';
+const base = { stitches: pre.n, changes: pre.k, mode: pre.mode, craft: pre.craft, style: 'paren', spacing: pre.spacing || (pre.n < 30 ? 'even' : 'simple') };
+const main = plan({ ...base, shape: pre.shape });
+const other = plan({ ...base, shape: pre.shape === 'flat' ? 'round' : 'flat' });
+const noun = isDec ? 'decrease' : 'increase';
+const nouns = isDec ? 'decreases' : 'increases';
+const shapeName = (s: string) => (s === 'flat' ? 'on a flat row' : 'in the round');
+// The same stitch count with a few nearby change counts.
+const lo = Math.max(1, pre.k - 2);
+const rows = [] as { n: number; k: number; text: string; total: number }[];
+for (let k = lo; k <= lo + 4; k++) {
+  const r = plan({ ...base, changes: k, shape: pre.shape });
+  if (r.ok) rows.push({ n: pre.n, k, text: r.text, total: r.total });
+}
+const relatedCases = x.related.map((s: string) => cases.find((o) => o.slug === s)).filter(Boolean);
+const url = `https://${site.domain}/${x.slug}/`;
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'WebApplication', name: x.h1, url, description: x.description, applicationCategory: site.category, operatingSystem: 'Any', inLanguage: site.locale, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' } },
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: x.faq.map((f: { q: string; a: string }) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+];
+---
+<Base title={x.title} description={x.description} jsonLd={jsonLd}>
+  <section class="mx-auto max-w-5xl px-4 pt-5 sm:pt-12">
+    <nav aria-label="Breadcrumb" class="mb-3 text-sm text-muted"><a href={href('/')} class="underline-offset-4 hover:underline">Knitting Increase Calculator</a> / <span>{x.link}</span></nav>
+    <h1 class="max-w-3xl text-3xl font-extrabold leading-[1.08] tracking-tight [text-wrap:balance] sm:text-5xl">{x.h1}</h1>
+    <p class="mt-3 max-w-3xl text-base sm:text-lg" data-answer>
+      To {noun} {pre.k} {pre.k === 1 ? 'stitch' : 'stitches'} evenly across {pre.n} stitches {shapeName(pre.shape)}, work: <code class="font-mono font-semibold">{main.text}.</code> You end with {main.total} stitches.
+    </p>
+    <div class="mt-6 min-h-[44rem] lg:min-h-[32rem]"><Tool preset={pre} /></div>
+    <AdSlot />
+  </section>
+
+  <section class="mx-auto max-w-5xl px-4 pt-16">
+    <article class="prose-site">
+      <p set:html={x.lead}></p>
+      {x.sections.map((s) => (<>
+        <h2>{s.h}</h2>
+        {s.p.map((t) => <p set:html={t}></p>)}
+      </>))}
+
+      <h2>The same case {pre.shape === 'flat' ? 'in the round' : 'on a flat row'}</h2>
+      {other.ok && <>
+        <p>With {pre.n} stitches and {pre.k} {nouns} {shapeName(pre.shape === 'flat' ? 'round' : 'flat')}, the line is:</p>
+        <p><code>{other.text}.</code></p>
+        <p>{check(other)}</p>
+      </>}
+
+      <h2>Nearby counts for {pre.n} stitches</h2>
+      <p>Other {noun} counts for the same {pre.n} stitches, {shapeName(pre.shape)}. The calculator wrote each line.</p>
+      <div class="overflow-x-auto" tabindex="0" role="region" aria-label={`Nearby ${noun} counts for ${pre.n} stitches`}>
+        <table class="kic-table">
+          <thead><tr><th>Stitches</th><th>{isDec ? 'Remove' : 'Add'}</th><th>Pattern line</th><th>You get</th></tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr><td>{r.n}</td><td>{isDec ? '−' : '+'}{r.k}</td><td><code>{r.text}</code></td><td>{r.total}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Questions</h2>
+      {x.faq.map((f) => (<>
+        <h3>{f.q}</h3>
+        <p>{f.a}</p>
+      </>))}
+
+      <h2>More calculators</h2>
+      <ul>
+        {relatedCases.map((o) => <li><a href={href(`/${o!.slug}/`)}>{o!.link}</a></li>)}
+        <li><a href={href('/')}>The full calculator, with every option</a></li>
+      </ul>
+    </article>
+  </section>
+</Base>
+<style is:global>
+  .kic-table { width: 100%; min-width: 36rem; border-collapse: collapse; font-size: 0.9375rem; margin: 0.5rem 0 1.25rem; }
+  .kic-table th, .kic-table td { border-bottom: 1px solid var(--line); padding: 0.55rem 0.6rem; text-align: left; vertical-align: top; }
+  .kic-table th { font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  .prose-site code { font-family: var(--font-mono); font-size: 0.9em; background: var(--brand-soft); padding: 0.1em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+  .kic-table code { white-space: normal; }
+</style>

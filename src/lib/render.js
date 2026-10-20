@@ -39,11 +39,55 @@ export function dotsHtml(cells) {
   return html;
 }
 
+// Join repeats: [1, 1, 2] -> "1 (twice), 2". Several changes can fall at one place when there are many.
+function places(list) {
+  const out = [];
+  for (let i = 0; i < list.length; i++) {
+    let j = i;
+    while (j + 1 < list.length && list[j + 1] === list[i]) j++;
+    const c = j - i + 1;
+    out.push(c === 1 ? `${list[i]}` : `${list[i]} (${c === 2 ? 'twice' : `${c} times`})`);
+    i = j;
+  }
+  return out;
+}
+
 /** The "where the changes go" sentence. */
 export function whereText(p) {
   const lim = 40;
-  const list = p.after.slice(0, lim).join(', ') + (p.after.length > lim ? ', ...' : '');
+  const all = places(p.after);
+  const list = all.slice(0, lim).join(', ') + (all.length > lim ? ', ...' : '');
   if (p.mode === 'dec') return `Work ${p.op} over these stitch pairs, counting from the first stitch you have now: starting at stitch ${list}.`;
   if (p.uses === 1) return `Work ${p.op} in these stitches, counted on the ${p.n} you have now: ${list}.`;
   return `${p.op} after stitch ${list} (counted on the ${p.n} you have now${p.after[0] === 0 ? '; 0 means before the first stitch' : ''}).`;
+}
+
+/**
+ * The row as a map: each run of plain stitches is a block with its count, each change is a diamond.
+ * Repeats are folded ("x6"), so a long row stays short.
+ */
+export function mapHtml(p) {
+  const chip = (r, c) => {
+    const k = r > 0 ? `<span class="mb k">${esc(p.w.trim())}${r}</span>` : '';
+    const ch = `<span class="mb c">${esc(p.op)}${c > 1 ? ` &times;${c}` : ''}</span>`;
+    return k + ch;
+  };
+  // Units: a plain run followed by one or more changes (a zero run joins the change before it).
+  const units = [];
+  const runs = p.flat ? p.runs.slice(0, -1) : p.runs;
+  runs.forEach((r, i) => {
+    if (r === 0 && i > 0 && units.length) units[units.length - 1].c++;
+    else units.push({ r, c: 1 });
+  });
+  const tail = p.flat ? p.runs[p.runs.length - 1] : 0;
+  const parts = [];
+  for (let i = 0; i < units.length; ) {
+    let j = i;
+    while (j + 1 < units.length && units[j + 1].r === units[i].r && units[j + 1].c === units[i].c) j++;
+    const n = j - i + 1;
+    parts.push(n > 1 ? `<span class="mg">${chip(units[i].r, units[i].c)}<span class="mx">&times;${n}</span></span>` : chip(units[i].r, units[i].c));
+    i = j + 1;
+  }
+  if (tail > 0) parts.push(`<span class="mb k">${esc(p.w.trim())}${tail}</span>`);
+  return parts.join('') + (p.flat ? '' : '<span class="mx end">then repeat around</span>');
 }

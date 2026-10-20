@@ -54,12 +54,13 @@ export function groupRuns(runs, flat) {
   return flat && runs.length > 2 ? [runs[0], ...out, runs[runs.length - 1]] : out;
 }
 
-// Group equal neighbours: [4,4,5] -> [{r:4,c:2},{r:5,c:1}]
+// Group equal neighbours: [4,4,5] -> [{r:4,c:2},{r:5,c:1}]. Items may be numbers or {r, c} units.
 function groups(list) {
   const out = [];
-  for (const r of list) {
+  for (const item of list) {
+    const u = typeof item === 'number' ? { r: item, c: 1 } : item;
     const last = out[out.length - 1];
-    if (last && last.r === r) last.c++; else out.push({ r, c: 1 });
+    if (last && last.r === u.r && last.c === u.c) last.n++; else out.push({ r: u.r, c: u.c, n: 1 });
   }
   return out;
 }
@@ -71,11 +72,24 @@ function rep(unit, c, style) {
   return `*${unit}; rep from * ${c === 2 ? 'once more' : `${c - 1} more times`}`;
 }
 
-// One plain run followed by a change: "K5, M1". A zero run is just the change.
-const unitText = (r, w, op) => (r > 0 ? `${w}${r}, ${op}` : op);
+// One plain run followed by `c` changes: "K5, M1" or "K1, M1 twice". A zero run is just the changes.
+function unitText(r, c, w, op) {
+  const chg = c === 1 ? op : c === 2 ? `${op} twice` : `${op} ${c} times`;
+  return r > 0 ? `${w}${r}, ${chg}` : chg;
+}
 
-function unitsText(list, w, op, style) {
-  return groups(list).map(({ r, c }) => rep(unitText(r, w, op), c, style)).join(', ');
+// Turn runs into units. A zero-length run sits right after a change, so it adds to the change before it.
+function toUnits(runs) {
+  const units = [];
+  runs.forEach((r, i) => {
+    if (r === 0 && i > 0 && units.length) units[units.length - 1].c++;
+    else units.push({ r, c: 1 });
+  });
+  return units;
+}
+
+function unitsText(units, w, op, style) {
+  return groups(units).map(({ r, c, n }) => rep(unitText(r, c, w, op), n, style)).join(', ');
 }
 
 /**
@@ -116,8 +130,16 @@ export function plan(opts) {
   }
 
   let runs = flat ? flatRuns(m, k) : roundRuns(m, k);
-  const simple = opts.spacing === 'simple';
+  // Exactly q increases per stitch: every stitch is followed by q new stitches.
+  const perStitch = !isDec && uses === 0 && !edge && k >= n && k % n === 0 ? k / n : 0;
+  const simple = opts.spacing === 'simple' && !perStitch;
+  if (perStitch) runs = Array.from({ length: flat ? k + 1 : k }, (_, i) => (i % perStitch === 0 && i < k ? 1 : 0));
   if (simple) runs = groupRuns(runs, flat);
+  // In the round, start the line on a plain stitch, so a run of zeros never opens it.
+  if (!flat && !isDec && uses === 0 && runs[0] === 0 && runs.some((r) => r > 0)) {
+    const at = runs.findIndex((r) => r > 0);
+    runs = [...runs.slice(at), ...runs.slice(0, at)];
+  }
   const total = isDec ? n - k : n + k;
   const spread = Math.max(...runs) - Math.min(...(flat && runs.length > 2 ? runs.slice(1, -1) : runs));
   if (edge) { runs[0] += edge; runs[runs.length - 1] += edge; }
@@ -126,23 +148,24 @@ export function plan(opts) {
   const style = opts.style === 'paren' ? 'paren' : 'star';
   let text;
   let repeats = 1;
-  if (flat) {
-    const first = runs[0];
-    const last = runs[runs.length - 1];
-    const parts = [];
-    if (first > 0) parts.push(`${w}${first}`);
-    parts.push(op);
-    for (const { r, c } of groups(runs.slice(1, -1))) parts.push(rep(unitText(r, w, op), c, style));
-    if (last > 0) parts.push(`${w}${last}`);
+  if (perStitch) {
+    text = rep(unitText(1, perStitch, w, op), n, 'paren');
+  } else if (flat) {
+    const tail = runs[runs.length - 1];
+    const units = toUnits(runs.slice(0, -1));
+    const parts = [rep(unitText(units[0].r, units[0].c, w, op), 1, style)];
+    const rest = unitsText(units.slice(1), w, op, style);
+    if (rest) parts.push(rest);
+    if (tail > 0) parts.push(`${w}${tail}`);
     text = parts.join(', ');
   } else {
     // The runs repeat g times around when stitches and changes share a factor.
     // Grouped runs ("shorter line") do not repeat, unless every run is the same size.
     const g = simple && new Set(runs).size > 1 ? 1 : gcd(m, k);
-    const base = runs.slice(0, k / g);
+    const base = toUnits(runs.slice(0, k / g));
     repeats = g;
     if (base.length === 1) {
-      const unit = unitText(base[0], w, op);
+      const unit = unitText(base[0].r, base[0].c, w, op);
       if (g === 1) text = unit;
       else text = style === 'paren' ? rep(unit, g, 'paren') : `*${unit}; rep from * to end of round`;
     } else {
@@ -174,17 +197,35 @@ export function plan(opts) {
   if (uses === 0 && !isDec && flat && (runs[0] === 0 || runs[runs.length - 1] === 0)) {
     notes.push('Some increases fall at the very edge of the row. Check your edge stitches.');
   }
-  if (!isDec && uses === 0 && k > n) notes.push('You add more stitches than you have. Some places get two or more increases in a row.');
+  if (perStitch === 1) notes.push(`Every stitch gets an ${op}. Work one ${op} after each stitch.`);
+  else if (perStitch) notes.push(`You add ${perStitch} times the stitches you have, so every stitch gets ${perStitch} ${op} in a row. "${op} twice" means two ${op} one after the other.`);
+  else if (!isDec && uses === 0 && k > n) notes.push(`You add more stitches than you have, so some places get 2 or more ${op} in a row. "${op} twice" means two ${op} one after the other.`);
   if (!isDec && uses === 1 && k === n) notes.push(`Every stitch gets an ${op}.`);
   if (isDec && m < k) notes.push('Some decreases sit next to each other.');
   if (!flat) notes.push('Place a marker at the start of the round and work the pattern from there.');
 
-  return { ok: true, mode, op, w, verb, uses, n, k, total, runs, text, repeats, cells, after, notes, perfect: spread === 0 };
+  const plain = runs.reduce((a, b) => a + b, 0);
+  return { ok: true, flat, plain, mode, op, w, verb, uses, n, k, total, runs, text, repeats, cells, after, notes, perfect: spread === 0 };
 }
 
 /** Plain-language summary line. */
 export function summary(p) {
   return `${p.verb[0].toUpperCase()}${p.verb.slice(1)} ${plural(p.k, 'stitch')} across ${plural(p.n, 'stitch')}. You end with ${p.total}.`;
+}
+
+/** One line to check the count: "Check: 7 M1 and 50 K. You end with 57 stitches." */
+export function check(p) {
+  const word = p.w.trim();
+  return `Check: ${p.k} ${p.op} and ${p.plain} ${word}. You end with ${plural(p.total, 'stitch')}.`;
+}
+
+/** One visible sentence on where the changes sit at the edges. */
+export function edgeNote(p) {
+  if (!p.flat) return 'In the round there are no edges. Every gap is a full gap, and the line repeats evenly all the way around.';
+  const first = p.runs[0];
+  const last = p.runs[p.runs.length - 1];
+  if (first === 0 || last === 0) return 'Flat row: some changes sit at the very edge here, because there are so many of them.';
+  return `Flat row: the first and last runs (${first} and ${last}) are about half a gap, so no ${p.mode === 'dec' ? 'decrease' : 'new stitch'} sits on the edge.`;
 }
 
 /** Short explanation of one stitch name, shown next to the result. Empty when we have none. */

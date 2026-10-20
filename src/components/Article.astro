@@ -2,7 +2,7 @@
 // SEO article. Worked examples and table values come from the tested logic in src/lib/spread.js.
 import { href } from '../lib/url.ts';
 ---
-<section aria-labelledby="about-tool" class="mx-auto max-w-5xl px-4 pt-16">
+<section aria-labelledby="about-tool" class="noprint mx-auto max-w-5xl px-4 pt-16">
   <article class="prose-site">
     <h2 id="about-tool" style="margin-top:0">How to increase evenly across a row</h2>
     <p>A pattern often says "increase 12 stitches evenly across the next row." It does not say where. A knitting increase calculator does the sums for you. You enter the stitches on your needle and the number to add. It writes the pattern line and shows where each new stitch goes.</p>
@@ -21,8 +21,8 @@ import { href } from '../lib/url.ts';
 
     <h2>What the pattern line means</h2>
     <p>Take 50 stitches and 7 increases on a flat row. The tool gives this line:</p>
-    <p><code>K4, M1, *K7, M1; rep from * 5 more times, K4.</code></p>
-    <p>Read it in order. Knit 4 stitches. Make one. Then knit 7 and make one, and do that 5 more times, 6 times in all. Knit the last 4 stitches. You worked 7 increases, and you now have 57 stitches. The first and last runs are shorter on purpose. They are about half a normal run, so the new stitches sit evenly across the fabric and not against the edges.</p>
+    <p><code>K4, M1, (K7, M1) 6 times, K4.</code></p>
+    <p>Read it in order. Knit 4 stitches. Make one. Then knit 7 and make one, and do that 6 times in all. Knit the last 4 stitches. If you prefer the star form, choose it under More options: <code>K4, M1, *K7, M1; rep from * 5 more times, K4.</code> It gives the same row. You worked 7 increases, and you now have 57 stitches. The first and last runs are shorter on purpose. They are about half a normal run, so the new stitches sit evenly across the fabric and not against the edges.</p>
 
     <h2>How the math works</h2>
     <p>Divide the stitches by the number of changes. That gives the gap between changes. For 60 stitches and 12 increases, 60 &divide; 12 = 5, so you work 5 stitches, then increase, 12 times. When the division leaves a remainder, some gaps are one stitch longer than the others. The calculator places the longer gaps so they are spread out and not bunched together. On a flat row the two ends get half a gap each, so no increase sits on the edge.</p>

@@ -53,3 +53,15 @@
 18. amigurumi increase calculator
 19. evenly spaced increases for lace (yarn over)
 20. knitting stitch calculator for a swatch to gauge
+
+## Gap fix (2026-10-20)
+Done:
+- Gap 1: default repeats style is now "(K7, M1) 6 times"; star form stays as an option. "Check: 7 M1 and 50 K. You end with 57 stitches." under the line. "Most even" is the default for rows under 30 stitches until the visitor picks a style.
+- Gap 2: edge cases. Every-stitch case reads "(K1, M1) 20 times"; more changes than stitches merge into "M1 twice" and never print "M1, M1". Duplicate "after stitch" positions are folded ("4 (twice)"). One-line notes explain the rule.
+- Gap 3: H1 "Knitting increase evenly calculator", H2 "Knitting and crochet: ...", title "Knitting Increase Calculator: Increase Evenly Across a Row".
+- Gap 4: 10 pre-rendered landing pages (src/data/cases.ts, src/pages/[slug].astro), each with its own title, H1, preset calculator, computed answer line, other-shape line, nearby-counts table, own text and FAQ schema; linked from the home page.
+- Gap 5: Print button (print CSS shows only the result). Gap 6: row map with K blocks, change diamonds and repeat counts. Gap 7: visible edge sentence under the result. Gap 8: "I know: Final stitch count" mode. Gap 9: rib FAQ. Gap 10: last numbers kept in the browser (home page, try/catch).
+- npm test: 31 pass (test script now runs with --experimental-strip-types). Build: 16 pages. Lighthouse (mobile, Chrome, local build): 100/100/100/100 on home and two landing pages.
+Skipped:
+- "Save as image": Print covers saving as PDF. An image export needs a canvas drawing step with little gain.
+- Per-page number pages beyond 10 (the report asked for 10 to 20; brief caps at 10). More are in the Phase 2 list above.

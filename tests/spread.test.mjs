@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { plan, flatRuns, roundRuns, summary, explain } from '../src/lib/spread.js';
-import { lineHtml, dotsHtml, whereText } from '../src/lib/render.js';
+import { plan, flatRuns, roundRuns, summary, explain, check, edgeNote } from '../src/lib/spread.js';
+import { lineHtml, dotsHtml, whereText, mapHtml } from '../src/lib/render.js';
 
 const sum = (a) => a.reduce((x, y) => x + y, 0);
 
@@ -251,4 +251,56 @@ test('whereText and explain', () => {
 
 test('shorter line in the round still says "to end of round" when every run is equal', () => {
   assert.equal(plan({ stitches: 40, changes: 8, shape: 'round', spacing: 'simple' }).text, '*K5, M1; rep from * to end of round');
+});
+
+test('gap fix: every stitch gets a change, in plain words', () => {
+  const p = plan({ stitches: 20, changes: 20, style: 'paren' });
+  assert.equal(p.text, '(K1, M1) 20 times');
+  assert.equal(p.total, 40);
+  assert.match(p.notes.join(' '), /Every stitch gets an M1/);
+  assert.equal(plan({ stitches: 20, changes: 40, style: 'paren', shape: 'round' }).text, '(K1, M1 twice) 20 times');
+});
+
+test('gap fix: more changes than stitches never prints M1, M1 side by side', () => {
+  for (const shape of ['flat', 'round']) {
+    for (const k of [21, 25, 30, 33, 50, 59]) {
+      const p = plan({ stitches: 20, changes: k, shape });
+      assert.equal(p.ok, true);
+      assert.ok(!/M1, M1/.test(p.text), p.text);
+      assert.equal(sum(p.runs), 20);
+    }
+  }
+});
+
+test('gap fix: positions are not listed twice', () => {
+  const where = whereText(plan({ stitches: 20, changes: 25 }));
+  assert.ok(!/\b(\d+), \1\b/.test(where), where);
+  assert.match(where, /\(twice\)/);
+});
+
+test('gap fix: check line and edge sentence', () => {
+  const p = plan({ stitches: 50, changes: 7, style: 'paren' });
+  assert.equal(p.text, 'K4, M1, (K7, M1) 6 times, K4');
+  assert.equal(check(p), 'Check: 7 M1 and 50 K. You end with 57 stitches.');
+  assert.match(edgeNote(p), /first and last runs \(4 and 4\)/);
+  assert.match(edgeNote(plan({ stitches: 50, changes: 7, shape: 'round' })), /no edges/);
+  assert.equal(check(plan({ stitches: 50, changes: 7, mode: 'dec' })), 'Check: 7 K2tog and 36 K. You end with 43 stitches.');
+  assert.equal(check(plan({ stitches: 24, changes: 6, shape: 'round', craft: 'crochet' })), 'Check: 6 inc and 18 sc. You end with 30 stitches.');
+});
+
+test('gap fix: row map folds repeats', () => {
+  const html = mapHtml(plan({ stitches: 50, changes: 7 }));
+  assert.match(html, /K4/);
+  assert.match(html, /&times;6/);
+});
+
+test('gap fix: every landing page case gives a valid line', async () => {
+  const { cases } = await import('../src/data/cases.ts');
+  assert.ok(cases.length >= 8 && cases.length <= 10);
+  const slugs = new Set();
+  for (const c of cases) {
+    assert.ok(!slugs.has(c.slug)); slugs.add(c.slug);
+    const p = plan({ stitches: c.preset.n, changes: c.preset.k, mode: c.preset.mode, shape: c.preset.shape, craft: c.preset.craft });
+    assert.equal(p.ok, true, c.slug);
+  }
 });
