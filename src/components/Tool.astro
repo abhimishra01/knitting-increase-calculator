@@ -304,7 +304,7 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
     const incSel = sel('inc');
     const inc = crochet ? undefined : incSel === 'KFB' && purl ? 'PFB' : incSel;
     const dec = crochet ? undefined : names[sel('dec') as keyof typeof names];
-    const wrongWay = byTarget && Number.isFinite(n) && Number.isFinite(field) && k < 0;
+    const wrongWay = byTarget && Number.isFinite(n) && Number.isFinite(field) && k <= 0;
     const p = wrongWay ? { ok: false, error: isDec ? `Your final count must be lower than ${n}.` : `Your final count must be higher than ${n}.` } : plan({
       stitches: n, changes: k, mode, shape, craft, knit: purl ? 'P' : 'K', inc, dec,
       style: sel('style'), spacing: q('spacing'), edge: Number(sel('edge')),
