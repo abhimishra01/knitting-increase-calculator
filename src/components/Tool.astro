@@ -1,102 +1,87 @@
 ---
 // The calculator. Results update as you type. Logic lives in src/lib/spread.js (tested).
+// The first result is drawn here at build time, so the page is not empty before the script runs.
+import { plan, summary, explain } from '../lib/spread.js';
+import { lineHtml, dotsHtml, whereText, esc } from '../lib/render.js';
+const first = plan({ stitches: 50, changes: 7, spacing: 'simple' });
+if (!first.ok) throw new Error('Default calculator values failed');
+const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
 ---
-<section id="tool" aria-label="Knitting increase calculator" class="kic rounded-2xl border border-line bg-card p-4 sm:p-6 sm:shadow-[6px_6px_0_0_var(--line)]">
-  <div class="grid gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-8">
+<section id="tool" aria-label="Knitting and crochet increase calculator" class="kic rounded-2xl border border-line bg-card p-4 sm:p-6 sm:shadow-[6px_6px_0_0_var(--line)]">
+  <div class="grid gap-5 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-8">
     <!-- Inputs -->
-    <div class="space-y-5">
-      <fieldset>
-        <legend class="mb-2 text-sm font-semibold">What do you want to do?</legend>
-        <div class="seg" role="radiogroup">
-          <label><input type="radio" name="mode" value="inc" checked /><span>Increase</span></label>
-          <label><input type="radio" name="mode" value="dec" /><span>Decrease</span></label>
-        </div>
-      </fieldset>
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <fieldset class="min-w-0">
+          <legend class="mb-1.5 text-sm font-semibold">Craft</legend>
+          <div class="seg two" role="radiogroup">
+            <label><input type="radio" name="craft" value="knit" checked /><span>Knit</span></label>
+            <label><input type="radio" name="craft" value="crochet" /><span>Crochet</span></label>
+          </div>
+        </fieldset>
+        <fieldset class="min-w-0">
+          <legend class="mb-1.5 text-sm font-semibold">Change</legend>
+          <div class="seg two" role="radiogroup">
+            <label><input type="radio" name="mode" value="inc" checked /><span>Increase</span></label>
+            <label><input type="radio" name="mode" value="dec" /><span>Decrease</span></label>
+          </div>
+        </fieldset>
+      </div>
 
       <fieldset>
-        <legend class="mb-2 text-sm font-semibold">Knitting flat or in the round?</legend>
-        <div class="seg" role="radiogroup">
+        <legend class="mb-1.5 text-sm font-semibold">Work</legend>
+        <div class="seg two" role="radiogroup">
           <label><input type="radio" name="shape" value="flat" checked /><span>Flat rows</span></label>
           <label><input type="radio" name="shape" value="round" /><span>In the round</span></label>
         </div>
       </fieldset>
 
-      <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label for="n" class="text-sm font-semibold">Stitches now</label>
-        <div class="stepper mt-2">
-          <button type="button" data-step="n" data-dir="-1" aria-label="One fewer stitch on the needle">&minus;</button>
-          <input id="n" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="50" maxlength="4" />
-          <button type="button" data-step="n" data-dir="1" aria-label="One more stitch on the needle">+</button>
+      <div class="grid grid-cols-2 gap-x-3 gap-y-0">
+        <div>
+          <label for="n" class="text-sm font-semibold">Stitches now</label>
+          <div class="stepper mt-1.5">
+            <button type="button" data-step="n" data-dir="-1" aria-label="One fewer stitch on the needle">&minus;</button>
+            <input id="n" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="50" maxlength="4" />
+            <button type="button" data-step="n" data-dir="1" aria-label="One more stitch on the needle">+</button>
+          </div>
         </div>
-      </div>
-
-      <div>
-        <label for="k" class="text-sm font-semibold"><span id="k-label">Stitches to add</span></label>
-        <div class="stepper mt-2">
-          <button type="button" data-step="k" data-dir="-1" aria-label="One fewer change">&minus;</button>
-          <input id="k" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="7" maxlength="4" aria-describedby="k-hint" />
-          <button type="button" data-step="k" data-dir="1" aria-label="One more change">+</button>
+        <div>
+          <label for="k" class="text-sm font-semibold"><span id="k-label">Stitches to add</span></label>
+          <div class="stepper mt-1.5">
+            <button type="button" data-step="k" data-dir="-1" aria-label="One fewer change">&minus;</button>
+            <input id="k" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="7" maxlength="4" aria-describedby="k-hint" />
+            <button type="button" data-step="k" data-dir="1" aria-label="One more change">+</button>
+          </div>
         </div>
-        <p id="k-hint" class="mt-1.5 min-h-[1.25rem] text-xs text-muted"></p>
-      </div>
-      </div>
-
-    </div>
-
-    <!-- Results -->
-    <div class="min-w-0">
-      <p id="summary" class="min-h-[1.5rem] text-sm font-medium text-muted"></p>
-      <div class="mt-2 rounded-xl border border-line bg-paper p-4">
-        <div class="flex items-center justify-between gap-3">
-          <h2 class="text-sm font-semibold uppercase tracking-wide text-muted">Pattern line</h2>
-          <button id="copy" type="button" class="btn">Copy</button>
-        </div>
-        <p id="result" class="result mt-3 font-mono text-lg font-semibold leading-snug sm:text-xl" aria-live="polite" aria-atomic="true"></p>
-        <p id="error" class="mt-1 text-base font-medium text-[color:var(--err)]" role="alert"></p>
+        <p id="k-hint" class="col-span-2 mt-1.5 text-sm text-muted empty:hidden" aria-live="polite"></p>
       </div>
 
-      <div class="mt-4">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-muted">Your row</h2>
-        <div id="dots" class="dots mt-2" role="img" aria-label=""></div>
-        <ul class="legend mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted" aria-hidden="true">
-          <li><i class="dot"></i> stitch</li>
-          <li id="legend-op"><i class="dot new"></i> <span>new stitch</span></li>
-        </ul>
-      </div>
-
-      <div class="mt-4 min-h-[3.5rem]">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-muted" id="where-h">Where the changes go</h2>
-        <p id="where" class="mt-1 text-sm leading-relaxed"></p>
-        <ul id="notes" class="mt-2 list-disc space-y-1 pl-5 text-sm text-muted"></ul>
-      </div>
-      <details class="opts mt-4 rounded-xl border border-line px-3 py-2">
-        <summary class="cursor-pointer text-sm font-semibold">Stitch names and style</summary>
+      <details class="opts rounded-xl border border-line px-3 py-2">
+        <summary class="cursor-pointer text-sm font-semibold">More options</summary>
         <div class="mt-3 grid gap-3 pb-1">
-          <label class="opt">Row stitch
+          <label class="opt" data-for="knit">Row stitch
             <select id="knit"><option value="K">Knit (K)</option><option value="P">Purl (P)</option></select>
           </label>
-          <label class="opt">Increase
+          <label class="opt" data-for="knit">Increase
             <select id="inc">
               <option value="M1">M1 (make one)</option>
               <option value="M1L">M1L (left lean)</option>
               <option value="M1R">M1R (right lean)</option>
               <option value="YO">YO (yarn over)</option>
-              <option value="inc1">Inc 1</option>
+              <option value="KFB">KFB (knit front and back)</option>
             </select>
           </label>
-          <label class="opt">Decrease
+          <label class="opt" data-for="knit">Decrease
             <select id="dec">
-              <option value="auto">K2tog (P2tog on purl)</option>
-              <option value="SSK">SSK</option>
-              <option value="SKP">SKP</option>
-              <option value="K2tog tbl">K2tog tbl</option>
+              <option value="auto">K2tog</option>
+              <option value="ssk">SSK</option>
+              <option value="skp">SKP</option>
+              <option value="tbl">K2tog tbl</option>
             </select>
           </label>
-          <label class="opt">Spacing
-            <select id="spacing">
-              <option value="even">Most even (every gap fitted)</option>
-              <option value="simple">Fewest steps (shorter line)</option>
+          <label class="opt" id="edge-wrap">Plain edge stitches at each end
+            <select id="edge">
+              <option value="0">None</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
             </select>
           </label>
           <label class="opt">Repeats
@@ -107,144 +92,199 @@
           </label>
         </div>
       </details>
+    </div>
+
+    <!-- Results -->
+    <div class="min-w-0">
+      <p id="summary" class="min-h-[1.5rem] text-sm font-medium text-muted">{summary(first)}</p>
+      <div class="mt-2 rounded-xl border border-line bg-paper p-4">
+        <div class="flex items-center justify-between gap-3">
+          <p class="text-sm font-semibold uppercase tracking-wide text-muted">Pattern line</p>
+          <button id="copy" type="button" class="btn">Copy</button>
+        </div>
+        <p id="result" class="result mt-3 font-mono text-lg font-semibold leading-snug sm:text-xl" aria-live="polite" aria-atomic="true" set:html={lineHtml(first.text + '.', first.op)}></p>
+        <noscript><p class="mt-2 text-sm text-muted">Turn on JavaScript to change the numbers. The line above is for 50 stitches and 7 increases.</p></noscript>
+        <p id="explain" class="explain mt-2 text-sm text-muted">{explain(first.op)}</p>
+        <fieldset class="mt-3">
+          <legend class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Line style</legend>
+          <div class="seg two" role="radiogroup">
+            <label><input type="radio" name="spacing" value="simple" checked /><span>Shorter line</span></label>
+            <label><input type="radio" name="spacing" value="even" /><span>Most even</span></label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="mt-4">
+        <p class="text-sm font-semibold uppercase tracking-wide text-muted">Your row</p>
+        <div id="dots" class="dots mt-2" role="img" aria-label="" set:html={dotsHtml(first.cells)}></div>
+        <ul class="legend mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted" aria-hidden="true">
+          <li><i class="dot"></i> stitch</li>
+          <li id="legend-op"><i class="dot new"></i> <span>new stitch</span></li>
+        </ul>
+      </div>
+
+      <div class="mt-4 min-h-[3.5rem]">
+        <p class="text-sm font-semibold uppercase tracking-wide text-muted" id="where-h">Where the changes go</p>
+        <p id="where" class="mt-1 text-sm leading-relaxed">{whereText(first)}</p>
+        <ul id="notes" class="mt-2 list-disc space-y-1 pl-5 text-sm text-muted" set:html={firstNotes}></ul>
+      </div>
       <p id="copy-status" class="sr-only" aria-live="polite"></p>
     </div>
   </div>
 </section>
 
 <style is:global>
-  .kic { --err: #b42318; --dot: color-mix(in oklab, var(--ink) 22%, var(--paper)); }
-  :root[data-theme="dark"] .kic { --err: #ff8a80; }
-  .kic .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 14px; background: var(--brand-soft); }
+  /* Plain colors first as a fallback for browsers without color-mix (before Safari 16.2). */
+  .kic { --err: #b42318; --dot: #8f8d88; --dot: color-mix(in oklab, var(--ink) 40%, var(--paper)); }
+  :root[data-theme="dark"] .kic { --err: #ff8a80; --dot: #85868c; --dot: color-mix(in oklab, var(--ink) 45%, var(--paper)); }
+  .kic [hidden] { display: none !important; }
+  .kic .seg.two { grid-template-columns: 1fr 1fr; }
+  .kic .seg { min-width: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 14px; background: var(--brand-soft); }
   .kic .seg label { position: relative; display: block; }
   .kic .seg input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; }
-  .kic .seg span { display: flex; min-height: 44px; align-items: center; justify-content: center; border-radius: 10px; padding: 0 8px; text-align: center; font-size: 0.9375rem; font-weight: 600; color: var(--muted); transition: background .15s, color .15s; }
+  .kic .seg span { display: flex; min-height: 44px; align-items: center; justify-content: center; border-radius: 10px; padding: 0 4px; text-align: center; font-size: 0.9375rem; font-weight: 600; color: var(--muted); transition: background .15s, color .15s; }
   .kic .seg input:checked + span { background: var(--brand); color: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / .18); }
   .kic .seg input:focus-visible + span { outline: 2px solid var(--brand-ink); outline-offset: 2px; }
-  :root[data-theme="dark"] .kic .seg input:checked + span { background: color-mix(in oklab, var(--brand) 78%, white); color: #16161a; }
+  :root[data-theme="dark"] .kic .seg input:checked + span { background: #cf8aa3; background: color-mix(in oklab, var(--brand) 60%, white); color: #16161a; }
   .kic .stepper { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 4px; }
   .kic .stepper button { min-height: 52px; padding: 0; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); font-size: 1.5rem; font-weight: 600; line-height: 1; color: var(--ink); cursor: pointer; touch-action: manipulation; }
   .kic .stepper button:hover { border-color: var(--brand); }
   .kic .stepper button:active { background: var(--brand-soft); }
   .kic .stepper input { min-height: 52px; width: 100%; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); text-align: center; font-family: var(--font-mono); font-size: 1.375rem; font-weight: 700; padding: 0; color: var(--ink); font-variant-numeric: tabular-nums; }
-  .kic .stepper input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 30%, transparent); }
+  .kic .stepper input:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 30%, transparent); }
   .kic .stepper input[aria-invalid="true"] { border-color: var(--err); }
   .kic .btn { min-height: 44px; padding: 0 18px; border-radius: 999px; background: var(--brand); color: #fff; font-weight: 700; font-size: 0.9375rem; cursor: pointer; border: 0; touch-action: manipulation; }
   .kic .btn:hover { filter: brightness(1.08); }
   .kic .btn:disabled { opacity: .45; cursor: not-allowed; }
-  :root[data-theme="dark"] .kic .btn { background: color-mix(in oklab, var(--brand) 78%, white); color: #16161a; }
+  :root[data-theme="dark"] .kic .btn { background: #cf8aa3; background: color-mix(in oklab, var(--brand) 60%, white); color: #16161a; }
   .kic .opt { display: grid; gap: 4px; font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
   .kic .opt select { min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); padding: 0 10px; font-size: 1rem; font-weight: 500; }
-  .kic .result { min-height: 5.25rem; overflow-wrap: anywhere; color: var(--ink); }
+  .kic .result { min-height: 4.5rem; overflow-wrap: anywhere; color: var(--ink); }
   .kic .result b { color: var(--brand-ink); font-weight: 800; }
   .kic .dots { display: flex; flex-wrap: wrap; gap: 5px 4px; align-content: flex-start; min-height: 5.5rem; max-height: 15rem; overflow: auto; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); }
   .kic .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--dot); flex: none; }
   .kic .dot.new { border-radius: 2px; transform: rotate(45deg) scale(.85); background: var(--brand); }
-  :root[data-theme="dark"] .kic .dot.new { background: color-mix(in oklab, var(--brand) 70%, white); }
+  :root[data-theme="dark"] .kic .dot.new { background: #cf8aa3; background: color-mix(in oklab, var(--brand) 60%, white); }
   .kic .dot.new.pill { border-radius: 99px; width: 22px; transform: none; }
   .kic .dots .gap { margin-right: 8px; }
+  .kic .explain { min-height: 1.25rem; }
   .kic .legend .dot { vertical-align: -2px; margin-right: 2px; }
 </style>
 
 <script>
-  import { plan, summary, MAX_STITCHES } from '../lib/spread.js';
+  import { plan, summary, explain, MAX_STITCHES } from '../lib/spread.js';
+  import { lineHtml, dotsHtml, whereText, esc } from '../lib/render.js';
 
   const $ = (id: string) => document.getElementById(id)!;
   const nEl = $('n') as HTMLInputElement;
   const kEl = $('k') as HTMLInputElement;
   const q = (name: string) => (document.querySelector(`input[name="${name}"]:checked`) as HTMLInputElement).value;
-  const sel = (id: string) => ($(id) as HTMLSelectElement).value;
+  const selEl = (id: string) => $(id) as HTMLSelectElement;
+  const sel = (id: string) => selEl(id).value;
+  const num = (el: HTMLInputElement) => (el.value.trim() === '' ? NaN : Number(el.value));
 
-  // Start from the address bar if it carries a shared setup.
+  // Share links carry the whole setup: numbers, radio choices and the option menus.
+  const RADIOS: Record<string, string> = { craft: 'c', mode: 'm', shape: 's', spacing: 'sp' };
+  const SELECTS: Record<string, string> = { knit: 'kn', inc: 'i', dec: 'd', edge: 'e', style: 'st' };
   try {
     const u = new URLSearchParams(location.search);
     const set = (el: HTMLInputElement, v: string | null) => { if (v && /^\d{1,4}$/.test(v)) el.value = v; };
     set(nEl, u.get('n')); set(kEl, u.get('k'));
-    for (const name of ['mode', 'shape']) {
-      const v = u.get(name === 'mode' ? 'm' : 's');
-      const r = document.querySelector(`input[name="${name}"][value="${v}"]`) as HTMLInputElement | null;
+    for (const [name, key] of Object.entries(RADIOS)) {
+      const r = document.querySelector(`input[name="${name}"][value="${u.get(key)}"]`) as HTMLInputElement | null;
       if (r) r.checked = true;
+    }
+    for (const [id, key] of Object.entries(SELECTS)) {
+      const v = u.get(key);
+      if (v && Array.from(selEl(id).options).some((o) => o.value === v)) selEl(id).value = v;
     }
   } catch {}
 
-  const num = (el: HTMLInputElement) => (el.value.trim() === '' ? NaN : Number(el.value));
   let lastText = '';
 
-  function esc(s: string) { return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!)); }
-  // Bold the change stitch in the pattern line so it stands out.
-  function mark(text: string, op: string) {
-    const safe = esc(text);
-    const o = esc(op).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return safe.replace(new RegExp(`(?<![A-Za-z0-9])${o}(?![A-Za-z0-9])`, 'g'), '<b>$&</b>');
+  // Stitch names that depend on the row stitch (knit or purl).
+  function decNames(purl: boolean) {
+    return purl
+      ? { auto: 'P2tog', ssk: 'SSP', skp: '', tbl: 'P2tog tbl' }
+      : { auto: 'K2tog', ssk: 'SSK', skp: 'SKP', tbl: 'K2tog tbl' };
   }
 
   function render() {
+    const craft = q('craft');
     const mode = q('mode');
     const shape = q('shape');
+    const crochet = craft === 'crochet';
     const isDec = mode === 'dec';
+    const flat = shape === 'flat';
+    const purl = !crochet && sel('knit') === 'P';
+
+    // Show only the options that fit the craft and the shape.
+    document.querySelectorAll<HTMLElement>('[data-for="knit"]').forEach((el) => { el.hidden = crochet; });
+    $('edge-wrap').hidden = !flat;
+
+    // Option labels follow the row stitch.
+    const names = decNames(purl);
+    for (const o of Array.from(selEl('dec').options)) {
+      const label = names[o.value as keyof typeof names];
+      o.textContent = label; o.hidden = !label; o.disabled = !label;
+    }
+    if (!names[sel('dec') as keyof typeof names]) selEl('dec').value = 'auto';
+    const kfb = selEl('inc').querySelector('option[value="KFB"]')!;
+    kfb.textContent = purl ? 'PFB (purl front and back)' : 'KFB (knit front and back)';
+
     $('k-label').textContent = isDec ? 'Stitches to remove' : 'Stitches to add';
     $('legend-op').innerHTML = isDec
       ? '<i class="dot new pill"></i> <span>2 stitches worked together</span>'
       : '<i class="dot new"></i> <span>new stitch</span>';
 
-    const knit = sel('knit');
-    const incSel = sel('inc');
-    const decSel = sel('dec');
     const n = num(nEl);
     const k = num(kEl);
-    nEl.setAttribute('aria-invalid', String(!(Number.isInteger(n) && n >= 1)));
-    $('k-hint').textContent = isDec && Number.isInteger(n) && n >= 2 ? `Most you can decrease: ${Math.floor(n / 2)}.` : '';
+    const nValid = Number.isInteger(n) && n >= 1 && n <= MAX_STITCHES;
+    nEl.setAttribute('aria-invalid', String(!nValid && Number.isFinite(n)));
 
+    const incSel = sel('inc');
+    const inc = crochet ? undefined : incSel === 'KFB' && purl ? 'PFB' : incSel;
+    const dec = crochet ? undefined : names[sel('dec') as keyof typeof names];
     const p = plan({
-      stitches: n, changes: k, mode, shape, knit, style: sel('style'), spacing: sel('spacing'),
-      inc: incSel === 'inc1' ? 'Inc 1' : incSel,
-      dec: decSel === 'auto' ? (knit === 'P' ? 'P2tog' : 'K2tog') : decSel === 'K2tog tbl' ? (knit === 'P' ? 'P2tog tbl' : 'K2tog tbl') : decSel,
+      stitches: n, changes: k, mode, shape, craft, knit: purl ? 'P' : 'K', inc, dec,
+      style: sel('style'), spacing: q('spacing'), edge: Number(sel('edge')),
     });
 
-    const result = $('result'), err = $('error'), dots = $('dots'), where = $('where'), notes = $('notes'), sum = $('summary');
+    const hint = $('k-hint'), result = $('result'), dots = $('dots'), where = $('where'), notes = $('notes'), sum = $('summary'), why = $('explain');
     const copy = $('copy') as HTMLButtonElement;
-    kEl.setAttribute('aria-invalid', String(!p.ok && Number.isFinite(n) && Number.isFinite(k)));
+    const blank = !Number.isFinite(n) || !Number.isFinite(k);
+    kEl.setAttribute('aria-invalid', String(!p.ok && !blank));
+    hint.classList.toggle('text-muted', p.ok || blank);
+    hint.style.color = !p.ok && !blank ? 'var(--err)' : '';
 
     if (!p.ok) {
-      const blank = !Number.isFinite(n) || !Number.isFinite(k);
-      result.innerHTML = '';
-      err.textContent = blank ? '' : p.error;
-      if (blank) result.textContent = 'Enter both numbers to see your pattern line.';
+      // The error sits right under the number fields, where a phone user is still looking.
+      hint.textContent = blank ? '' : p.error;
+      result.textContent = blank ? 'Enter both numbers to see your pattern line.' : 'Fix the numbers above to see your pattern line.';
       sum.textContent = '';
+      why.textContent = '';
       dots.innerHTML = ''; dots.setAttribute('aria-label', '');
       where.textContent = ''; notes.innerHTML = '';
       copy.disabled = true; lastText = '';
       return;
     }
 
-    err.textContent = '';
-    result.innerHTML = mark(p.text + '.', p.op);
+    hint.textContent = isDec && n >= 2 ? `Most you can decrease: ${Math.floor(n / 2)}.` : '';
+    result.innerHTML = lineHtml(p.text + '.', p.op);
     lastText = p.text + '.';
     copy.disabled = false;
+    why.textContent = explain(p.op);
     sum.textContent = summary(p) + (shape === 'round' ? ' Work it around the whole round.' : '');
 
-    // Dots: one span per stitch. Build in one pass.
-    let html = '';
-    let count = 0;
-    for (const c of p.cells) {
-      const g = count > 0 && count % 10 === 0 ? ' gap' : '';
-      if (c === 'k') { html += `<i class="dot${g}"></i>`; count++; }
-      else if (c === 'i') { html += `<i class="dot new"></i>`; }
-      else { html += `<i class="dot new pill${g}"></i>`; count += 2; }
-    }
-    dots.innerHTML = html;
-    dots.setAttribute('aria-label', `Picture of your row. ${p.cells.filter((c) => c !== 'k').length} ${isDec ? 'decreases' : 'increases'} spread across ${p.n} stitches.`);
-
-    const lim = 40;
-    const list = p.after.slice(0, lim).join(', ') + (p.after.length > lim ? ', ...' : '');
-    $('where-h').textContent = 'Where the changes go';
-    where.textContent = isDec
-      ? `Work ${p.op} over these stitch pairs, counting from the first stitch you have now: starting at stitch ${list}.`
-      : `${p.op} after stitch ${list} (counted on the ${p.n} stitches you have now${p.after[0] === 0 ? '; 0 means before the first stitch' : ''}).`;
+    dots.innerHTML = dotsHtml(p.cells);
+    dots.setAttribute('aria-label', `Picture of your row. ${p.k} ${isDec ? (p.k === 1 ? 'decrease' : 'decreases') : (p.k === 1 ? 'increase' : 'increases')} spread across ${p.n} stitches.`);
+    where.textContent = whereText(p);
     notes.innerHTML = p.notes.map((t: string) => `<li>${esc(t)}</li>`).join('');
 
     try {
-      const u = new URLSearchParams({ n: String(n), k: String(k), m: mode, s: shape });
+      const u = new URLSearchParams({ n: String(n), k: String(k) });
+      for (const [name, key] of Object.entries(RADIOS)) u.set(key, q(name));
+      for (const [id, key] of Object.entries(SELECTS)) u.set(key, sel(id));
       history.replaceState(null, '', `${location.pathname}?${u}`);
     } catch {}
   }

@@ -1,4 +1,5 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+@source "../";
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme inline {
@@ -21,6 +22,9 @@
   --ink: #16161a;
   --muted: #5d5d66;
   --line: #e2e0d8;
+  /* Plain colors first: browsers without color-mix (before Safari 16.2) use them. */
+  --brand-ink: #802246;
+  --brand-soft: #eee2e2;
   --brand-ink: color-mix(in oklab, var(--brand) 82%, black);
   --brand-soft: color-mix(in oklab, var(--brand) 10%, var(--paper));
 }
@@ -31,6 +35,8 @@
   --ink: #ececea;
   --muted: #a0a0a8;
   --line: #2a2b30;
+  --brand-ink: #c88aa1;
+  --brand-soft: #28151e;
   --brand-ink: color-mix(in oklab, var(--brand) 55%, white);
   --brand-soft: color-mix(in oklab, var(--brand) 18%, var(--paper));
 }

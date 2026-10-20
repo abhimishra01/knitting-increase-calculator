@@ -1,17 +1,19 @@
 ---
 // SEO article. Worked examples and table values come from the tested logic in src/lib/spread.js.
+import { href } from '../lib/url.ts';
 ---
 <section aria-labelledby="about-tool" class="mx-auto max-w-5xl px-4 pt-16">
   <article class="prose-site">
     <h2 id="about-tool" style="margin-top:0">How to increase evenly across a row</h2>
     <p>A pattern often says "increase 12 stitches evenly across the next row." It does not say where. A knitting increase calculator does the sums for you. You enter the stitches on your needle and the number to add. It writes the pattern line and shows where each new stitch goes.</p>
-    <p>This one also works for decreases. The same tool tells you how to decrease evenly, so a hat crown or a sleeve taper comes out smooth and not lumpy.</p>
+    <p>This one also works for decreases, and for crochet. Choose Knit or Crochet at the top. The same tool tells you how to decrease evenly, so a hat crown, a sleeve taper or an amigurumi shape comes out smooth and not lumpy.</p>
 
     <h2>How to use the calculator</h2>
     <ol>
+      <li>Choose <strong>Knit</strong> or <strong>Crochet</strong>.</li>
       <li>Choose <strong>Increase</strong> or <strong>Decrease</strong>.</li>
-      <li>Choose <strong>Flat</strong> if you work back and forth, or <strong>In the round</strong> if you work in a circle.</li>
-      <li>Type the stitches you have now. Count only the stitches that the pattern line covers. If your pattern has edge stitches that you want to keep plain, take them off the count first.</li>
+      <li>Choose <strong>Flat rows</strong> if you work back and forth, or <strong>In the round</strong> if you work in a circle.</li>
+      <li>Type the stitches you have now. Count only the stitches that the pattern line covers. If you want edge stitches kept plain, set them under <strong>More options</strong> and keep the full count.</li>
       <li>Type how many stitches to add or remove.</li>
       <li>Read the pattern line. Tap <strong>Copy</strong> to paste it into your notes.</li>
     </ol>
@@ -22,16 +24,28 @@
     <p><code>K4, M1, *K7, M1; rep from * 5 more times, K4.</code></p>
     <p>Read it in order. Knit 4 stitches. Make one. Then knit 7 and make one, and do that 5 more times, 6 times in all. Knit the last 4 stitches. You worked 7 increases, and you now have 57 stitches. The first and last runs are shorter on purpose. They are about half a normal run, so the new stitches sit evenly across the fabric and not against the edges.</p>
 
+    <h2>How the math works</h2>
+    <p>Divide the stitches by the number of changes. That gives the gap between changes. For 60 stitches and 12 increases, 60 &divide; 12 = 5, so you work 5 stitches, then increase, 12 times. When the division leaves a remainder, some gaps are one stitch longer than the others. The calculator places the longer gaps so they are spread out and not bunched together. On a flat row the two ends get half a gap each, so no increase sits on the edge.</p>
+    <p>A decrease works differently. Each K2tog uses two stitches and leaves one, so the calculator takes those stitches out of the count before it spaces the gaps.</p>
+
+    <h2>Example: increase 10 stitches across 80</h2>
+    <p>Enter 80 stitches and 10 increases on a flat row. The line is <code>K4, M1, *K8, M1; rep from * 8 more times, K4.</code> You knit 4, make one, then knit 8 and make one nine times, then knit 4. That is 4 + 9 &times; 8 + 4 = 80 stitches, with 10 increases, so you end with 90.</p>
+
     <h2>Flat rows and rounds work differently</h2>
     <p>On a flat row, the two ends are edges. The calculator puts half a gap at each end. When the numbers do not divide exactly, it splits the extra stitches between the two ends.</p>
     <p>In the round, there are no ends. The calculator spreads the changes all the way around and gives you a short repeat. For example, 60 stitches with 12 increases gives <code>*K5, M1; rep from * to end of round</code>. You end with 72 stitches. Put a marker at the start of the round so you can find your place.</p>
 
+    <h2>Crochet: sc, inc and sc2tog</h2>
+    <p>Choose Crochet and the line uses <strong>sc</strong> for the plain stitches, <strong>inc</strong> for 2 sc in the next stitch, and <strong>sc2tog</strong> for a decrease. For 24 stitches and 6 increases in the round you get <code>*sc 3, inc; rep from * to end of round</code>. Each inc is worked into a stitch you already have, so the plain stitches plus the inc stitches add up to your count. For double crochet or half double, use the same line and swap the stitch name.</p>
+
     <h2>How to decrease evenly</h2>
     <p>Each K2tog uses two stitches and leaves one. So 100 stitches with 10 decreases leaves 90. The line is <code>K4, K2tog, *K8, K2tog; rep from * 8 more times, K4.</code> The most you can decrease in one row is half your stitches. The tool tells you the limit as you type.</p>
-    <p>You can change the stitch names. Choose M1, M1L, M1R, a yarn over or Inc 1 for increases. Choose K2tog, SSK or SKP for decreases. On a purl row, switch to purl and the line uses P and P2tog.</p>
+
+    <h2>M1L vs M1R vs yarn over</h2>
+    <p>All three add a stitch between two stitches. <strong>M1L</strong> leans left and <strong>M1R</strong> leans right. Use them as a pair on each side of a center stitch so the shaping looks symmetrical. A <strong>yarn over</strong> leaves a small hole, which suits lace. <strong>KFB</strong> (knit front and back) adds a stitch by working into a stitch you already have. It leaves a small bump. On a purl row, switch the row stitch to purl and the line uses P, P2tog and SSP.</p>
 
     <h2>Common values</h2>
-    <p>These answers come from the calculator. Use them as a quick check.</p>
+    <p>These answers come from the calculator (flat rows or in the round, knit). Use them as a quick check.</p>
     <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Common increase and decrease patterns">
       <table class="kic-table">
         <thead><tr><th>Stitches</th><th>Change</th><th>Type</th><th>Pattern line</th><th>You get</th></tr></thead>
@@ -50,11 +64,11 @@
     <ul>
       <li><strong>Count twice.</strong> One wrong stitch count moves every change in the line.</li>
       <li><strong>Use markers.</strong> Slip a marker at each repeat on the first row. It is easy to lose count in a long row.</li>
-      <li><strong>Try "fewest steps".</strong> When the stitches do not divide evenly, the most even line can be long. The "fewest steps" choice groups like runs together. It gives a shorter line. The changes drift a little from perfect, but the fabric still looks even.</li>
+      <li><strong>Shorter line or most even.</strong> The calculator shows the shorter line first. It groups like runs together, so the line is easy to read. Switch to "Most even" for the line with every gap fitted exactly. The two give the same fabric to the eye. They differ by at most one stitch per gap.</li>
       <li><strong>Check the end count.</strong> The tool shows your total. Match it to the number in your pattern.</li>
-      <li><strong>Pick a stitch that fits.</strong> M1L and M1R lean in opposite directions. A yarn over leaves a small hole, which suits lace.</li>
+      <li><strong>Pick a stitch that fits.</strong> Match the increase to your pattern. Lace wants a yarn over. Smooth shaping wants M1L and M1R.</li>
     </ul>
-    <p>This page runs in your browser and stores nothing. Read more <a href="/about/">about the tool</a> or find answers below.</p>
+    <p>This page runs in your browser and stores nothing. Read more <a href={href('/about/')}>about the tool</a> or find answers below.</p>
   </article>
 </section>
 <style is:global>
