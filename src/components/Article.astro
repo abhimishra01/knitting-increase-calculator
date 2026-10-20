@@ -1,0 +1,66 @@
+---
+// SEO article. Worked examples and table values come from the tested logic in src/lib/spread.js.
+---
+<section aria-labelledby="about-tool" class="mx-auto max-w-5xl px-4 pt-16">
+  <article class="prose-site">
+    <h2 id="about-tool" style="margin-top:0">How to increase evenly across a row</h2>
+    <p>A pattern often says "increase 12 stitches evenly across the next row." It does not say where. A knitting increase calculator does the sums for you. You enter the stitches on your needle and the number to add. It writes the pattern line and shows where each new stitch goes.</p>
+    <p>This one also works for decreases. The same tool tells you how to decrease evenly, so a hat crown or a sleeve taper comes out smooth and not lumpy.</p>
+
+    <h2>How to use the calculator</h2>
+    <ol>
+      <li>Choose <strong>Increase</strong> or <strong>Decrease</strong>.</li>
+      <li>Choose <strong>Flat</strong> if you work back and forth, or <strong>In the round</strong> if you work in a circle.</li>
+      <li>Type the stitches you have now. Count only the stitches that the pattern line covers. If your pattern has edge stitches that you want to keep plain, take them off the count first.</li>
+      <li>Type how many stitches to add or remove.</li>
+      <li>Read the pattern line. Tap <strong>Copy</strong> to paste it into your notes.</li>
+    </ol>
+    <p>The answer updates as you type. There is no button to press.</p>
+
+    <h2>What the pattern line means</h2>
+    <p>Take 50 stitches and 7 increases on a flat row. The tool gives this line:</p>
+    <p><code>K4, M1, *K7, M1; rep from * 5 more times, K4.</code></p>
+    <p>Read it in order. Knit 4 stitches. Make one. Then knit 7 and make one, and do that 5 more times, 6 times in all. Knit the last 4 stitches. You worked 7 increases, and you now have 57 stitches. The first and last runs are shorter on purpose. They are about half a normal run, so the new stitches sit evenly across the fabric and not against the edges.</p>
+
+    <h2>Flat rows and rounds work differently</h2>
+    <p>On a flat row, the two ends are edges. The calculator puts half a gap at each end. When the numbers do not divide exactly, it splits the extra stitches between the two ends.</p>
+    <p>In the round, there are no ends. The calculator spreads the changes all the way around and gives you a short repeat. For example, 60 stitches with 12 increases gives <code>*K5, M1; rep from * to end of round</code>. You end with 72 stitches. Put a marker at the start of the round so you can find your place.</p>
+
+    <h2>How to decrease evenly</h2>
+    <p>Each K2tog uses two stitches and leaves one. So 100 stitches with 10 decreases leaves 90. The line is <code>K4, K2tog, *K8, K2tog; rep from * 8 more times, K4.</code> The most you can decrease in one row is half your stitches. The tool tells you the limit as you type.</p>
+    <p>You can change the stitch names. Choose M1, M1L, M1R, a yarn over or Inc 1 for increases. Choose K2tog, SSK or SKP for decreases. On a purl row, switch to purl and the line uses P and P2tog.</p>
+
+    <h2>Common values</h2>
+    <p>These answers come from the calculator. Use them as a quick check.</p>
+    <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Common increase and decrease patterns">
+      <table class="kic-table">
+        <thead><tr><th>Stitches</th><th>Change</th><th>Type</th><th>Pattern line</th><th>You get</th></tr></thead>
+        <tbody>
+          <tr><td>40</td><td>+8</td><td>Round</td><td><code>*K5, M1; rep from * to end of round</code></td><td>48</td></tr>
+          <tr><td>72</td><td>+12</td><td>Round</td><td><code>*K6, M1; rep from * to end of round</code></td><td>84</td></tr>
+          <tr><td>80</td><td>+10</td><td>Round</td><td><code>*K8, M1; rep from * to end of round</code></td><td>90</td></tr>
+          <tr><td>96</td><td>&minus;8</td><td>Round</td><td><code>*K10, K2tog; rep from * to end of round</code></td><td>88</td></tr>
+          <tr><td>50</td><td>+7</td><td>Flat</td><td><code>K4, M1, *K7, M1; rep from * 5 more times, K4</code></td><td>57</td></tr>
+          <tr><td>100</td><td>&minus;10</td><td>Flat</td><td><code>K4, K2tog, *K8, K2tog; rep from * 8 more times, K4</code></td><td>90</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Tips for neat results</h2>
+    <ul>
+      <li><strong>Count twice.</strong> One wrong stitch count moves every change in the line.</li>
+      <li><strong>Use markers.</strong> Slip a marker at each repeat on the first row. It is easy to lose count in a long row.</li>
+      <li><strong>Try "fewest steps".</strong> When the stitches do not divide evenly, the most even line can be long. The "fewest steps" choice groups like runs together. It gives a shorter line. The changes drift a little from perfect, but the fabric still looks even.</li>
+      <li><strong>Check the end count.</strong> The tool shows your total. Match it to the number in your pattern.</li>
+      <li><strong>Pick a stitch that fits.</strong> M1L and M1R lean in opposite directions. A yarn over leaves a small hole, which suits lace.</li>
+    </ul>
+    <p>This page runs in your browser and stores nothing. Read more <a href="/about/">about the tool</a> or find answers below.</p>
+  </article>
+</section>
+<style is:global>
+  .kic-table { width: 100%; min-width: 36rem; border-collapse: collapse; font-size: 0.9375rem; margin: 0.5rem 0 1.25rem; }
+  .kic-table th, .kic-table td { border-bottom: 1px solid var(--line); padding: 0.55rem 0.6rem; text-align: left; vertical-align: top; }
+  .kic-table th { font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  .prose-site code { font-family: var(--font-mono); font-size: 0.9em; background: var(--brand-soft); padding: 0.1em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+  .kic-table code { white-space: normal; }
+</style>
