@@ -313,7 +313,7 @@ const firstNotes = first.notes.map((t) => `<li>${esc(t)}</li>`).join('');
     const hint = $('k-hint'), checkEl = $('check'), mapEl = $('map'), edgeEl = $('edge-note'), result = $('result'), dots = $('dots'), where = $('where'), notes = $('notes'), sum = $('summary'), why = $('explain');
     const copy = $('copy') as HTMLButtonElement;
     const blank = !Number.isFinite(n) || !Number.isFinite(k);
-    kEl.setAttribute('aria-invalid', String(!p.ok && !blank));
+    kEl.setAttribute('aria-invalid', String(!p.ok && !blank && p.field !== 'n'));
     hint.classList.toggle('text-muted', p.ok || blank);
     hint.style.color = !p.ok && !blank ? 'var(--err)' : '';
 

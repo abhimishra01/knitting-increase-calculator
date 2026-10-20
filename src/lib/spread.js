@@ -112,9 +112,9 @@ export function plan(opts) {
   const flat = shape === 'flat';
   const edge = flat && Number.isInteger(opts.edge) && opts.edge > 0 ? opts.edge : 0;
 
-  if (!Number.isInteger(n) || n < 1) return { ok: false, error: 'Enter how many stitches you have now.' };
+  if (!Number.isInteger(n) || n < 1) return { ok: false, field: 'n', error: 'Enter how many stitches you have now.' };
   if (!Number.isInteger(k) || k < 0) return { ok: false, error: `Enter how many stitches to ${verb} (a whole number).` };
-  if (n > MAX_STITCHES) return { ok: false, error: `This tool handles up to ${MAX_STITCHES} stitches.` };
+  if (n > MAX_STITCHES) return { ok: false, field: 'n', error: `This tool handles up to ${MAX_STITCHES} stitches.` };
   if (k === 0) return { ok: false, error: `Nothing to ${verb}. Enter 1 or more.` };
   if (isDec && 2 * k > n) {
     return { ok: false, error: `Too many decreases. Each ${op} uses 2 stitches, so ${plural(n, 'stitch')} allow${n === 1 ? 's' : ''} at most ${Math.floor(n / 2)}.` };
