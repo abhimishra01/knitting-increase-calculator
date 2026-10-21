@@ -11,7 +11,7 @@ export default {
   titleOverride: 'Knitting Increase Calculator: Increase Evenly Across a Row', // home page <title>, under 60 characters
   tagline: 'Free, private, no sign-up',  // short line used in the title after the keyword
   description:
-    'Increase or decrease evenly across a row, for knitting or crochet. Enter your stitches and how many to add or remove. Get the exact pattern line, flat or in the round, plus a picture of your row.',
+    'Increase or decrease evenly across a row in knitting or crochet. Enter stitches and how many to add or remove. Get the exact pattern, flat or in the round.',
   email: 'hello@knittingincreasecalculator.com',
   // Bingemind build (SITE_MODE=bingemind): owner is Bingemind, contact goes to the Bingemind contact section (no invented email).
   bingemind,
